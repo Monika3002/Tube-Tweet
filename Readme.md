@@ -24,7 +24,14 @@ Prettier is a code formatter used in this project. It enforces a consistent styl
 
 how to connect the database. we are using mongodb here
 mongodb atlas https://www.mongodb.com/atlas/database
-
+# this are required
 dotenv package
 mongoose 
 express
+
+another required pakages for custom api
+cors :CORS(cross origin resource sharing) is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options.
+https://www.npmjs.com/package/cors
+
+cookies-praser:Parse Cookie header and populate req.cookies with an object keyed by the cookie names. Optionally you may enable signed cookie support by passing a secret string, which assigns req.secret so it may be used by other middleware.
+https://www.npmjs.com/package/cookie-parser
