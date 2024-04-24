@@ -35,3 +35,15 @@ https://www.npmjs.com/package/cors
 
 cookies-praser:Parse Cookie header and populate req.cookies with an object keyed by the cookie names. Optionally you may enable signed cookie support by passing a secret string, which assigns req.secret so it may be used by other middleware.
 https://www.npmjs.com/package/cookie-parser
+
+
+install mongoose  aggreate  function npm install mongoose-aggregate-paginate-v2
+It is a mongoose plugins : Plugins are a technique for reusing logic in multiple mongoose schemas. A plugin is similar to a method that you can use in your schema and reuse repeatedly over different instances of the schema. The main purpose of plugins is to modify your schemas.
+
+
+bcrypt  :A library to help you hash passwords.https://www.npmjs.com/package/bcrypt
+
+jwt(json web token) https://www.npmjs.com/package/json-web-token JWT encode and decode for Node.js that can use callbacks or by returning an object {error:, value:}
+
+prehook in middleware
+
