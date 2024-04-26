@@ -47,3 +47,11 @@ jwt(json web token) https://www.npmjs.com/package/json-web-token JWT encode and 
 
 prehook in middleware
 
+
+cloudnary : An big contentar organisation from  whicch
+
+// uploading of file is done in two ways multer and express 
+Multer is a node.js middleware for handling multipart/form-data, which is primarily used for uploading files. It is written on top of busboy for maximum efficiency.
+
+fs (File System) is a core Node.js module that provides an API for interacting with the file system. It allows you to perform operations like reading, writing, updating, and deleting files.The unlink method is one of the methods provided by the fs module. It's used to asynchronously delete a file from the file system.
+
