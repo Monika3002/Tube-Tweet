@@ -55,3 +55,5 @@ Multer is a node.js middleware for handling multipart/form-data, which is primar
 
 fs (File System) is a core Node.js module that provides an API for interacting with the file system. It allows you to perform operations like reading, writing, updating, and deleting files.The unlink method is one of the methods provided by the fs module. It's used to asynchronously delete a file from the file system.
 
+After that we have  created the routes and controller routes decide whhere to take the control and controller decide what  to do .Wee need to define an app in app.js we also tested this route using postman
+
