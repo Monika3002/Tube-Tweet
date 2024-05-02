@@ -57,3 +57,5 @@ fs (File System) is a core Node.js module that provides an API for interacting w
 
 After that we have  created the routes and controller routes decide whhere to take the control and controller decide what  to do .Wee need to define an app in app.js we also tested this route using postman
 
+AccessToken = short lived authentication
+refreshToken = long lived  
