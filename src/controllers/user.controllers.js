@@ -249,9 +249,94 @@ const loginUser = asyncHandler(async (req,res) => {
 
     })
 
+    const updateAvatar = asyncHandler( async( req ,res)=>{
+
+        const avatarLocalPath = req?.file?.path
+        if(!avatarLocalPath){
+            throw new apiError(400 , "Avatar is required")
+        }
+        //TODO : how to delete old avatar
+        User.findByIdAndDelete(req.user._id,
+            { 
+                $unset: {
+                    avatar : 1
+                }
+            },
+            {new : true}
+        )
+        const avatar = uploadOnCloudinary(avatarLocalPath)
+        if(!avatar){
+            throw new apiError(400 , "errror while uploading avatar on cloudaniary required")
+        }
+
+      const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set :{
+                    avatar : avatar.url
+                
+                }
+            },
+            {
+                new :true
+            }
+        ).select("-password")
+
+        return res
+        .status(200)
+        .json(
+            new apiResponse(200 , user ,"Avatar updated sucessfully")
+        )
+    })
+
+    const updateCoverImage = asyncHandler( async( req ,res)=>{
+
+        const coverImageLocalPath = req?.file?.path
+        if(!coverImageLocalPath){
+            throw new apiError(400 , "CoverImage is required")
+        }
+        //TODO : how to delete old avatar
+        User.findByIdAndDelete(req.user._id,
+            { 
+                $unset: {
+                    coverImage : 1
+                }
+            },
+            {new : true}
+        )
+        const coverImage = uploadOnCloudinary(coverImageLocalPath)
+        if(!avatar){
+            throw new apiError(400 , "errror while uploading CoverImage on cloudaniary required")
+        }
+
+      const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set :{
+                    coverImage : coverImage.url
+                
+                }
+            },
+            {
+                new :true
+            }
+        ).select("-password")
+
+        return res
+        .status(200)
+        .json(
+            new apiResponse(200 , user ,"CoverImage updated sucessfully")
+        )
+    })
+
+
 export {registerUser,
        loginUser,
        logoutUser,
        refreshToken,
-       changeCurrentPassword
+       changeCurrentPassword,
+       updateUserAccountDetails,
+       updateAvatar,
+       updateCoverImage
+
     };
