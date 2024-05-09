@@ -219,6 +219,36 @@ const loginUser = asyncHandler(async (req,res) => {
         )
     })
 
+    const updateUserAccountDetails = asyncHandler(async(req ,res) => {
+
+        //get the deatial from user 
+
+        const { fullName , email} = req.body
+
+        if(!fullName || !email){
+            throw new apiError(400 , "All fields are required")
+        }
+       const  user = await User.findByIdAndUpdate(
+            req.user?._id,
+            {
+                $set :{
+                    fullName,
+                    email
+                }
+            },
+            {
+                new : true  //return the updated document
+            }
+        ).select("-password ")
+
+        return res
+        .status(200)
+        .json(
+            new apiResponse(200 , user ,"Account details updated sucessfully")
+        )
+
+    })
+
 export {registerUser,
        loginUser,
        logoutUser,
