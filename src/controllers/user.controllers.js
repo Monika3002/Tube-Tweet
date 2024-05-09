@@ -196,9 +196,32 @@ const loginUser = asyncHandler(async (req,res) => {
 
     })
 
-    const changeCurrentPassword = async
+    const changeCurrentPassword = asyncHandler(async(req ,res ) => {
+        //for this we need to check if the user is logged in or not so wee need to use the auth middleware
+        //get the current password from the user
+        //check if the current password is correct
+        //change the password
+
+        const {oldPassword , newPassword} = req.body
+        const user = await findById(req.user._id)
+        const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+        if(isPasswordCorrect){
+            throw new apiError(400 , "Current password is incorrect")
+        }
+        
+        user.password = newPassword
+        user.save({validateBeforeSave : false}) //validateBeforeSave is used to validate the password before saving it to the database
+        
+        return res
+        .status(200)
+        .json(
+            new apiResponse(200 , {} ,"Password changed sucessfully")
+        )
+    })
 
 export {registerUser,
        loginUser,
        logoutUser,
-       refreshToken};
+       refreshToken,
+       changeCurrentPassword
+    };
