@@ -196,6 +196,8 @@ const loginUser = asyncHandler(async (req,res) => {
 
     })
 
+    const changeCurrentPassword = async
+
 export {registerUser,
        loginUser,
        logoutUser,
