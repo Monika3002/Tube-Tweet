@@ -1,9 +1,7 @@
 // import express from "express";
 import {Router} from  "express";
-import {registerUser} from  "../controllers/user.controllers.js"
+import {registerUser , loginUser ,logoutUser,refreshToken} from  "../controllers/user.controllers.js"
 import {upload} from "../middlewares/multer.middlewares.js"
-import {loginUser} from "../controllers/user.controllers.js"
-import {logoutUser} from "../controllers/user.controllers.js"
 import {verifyJWT} from  "../middlewares/auth.middlewares.js"
 const router = Router();
 
@@ -20,11 +18,12 @@ router.route("/register").post(
     ]),
     registerUser
     )
-router.route("/loginUser"),post(loginUser)
-
+router.route("/login").post(loginUser)
+ //secured route means user need to be logged in to access this route
 router.route("/logout").post(
     verifyJWT ,logoutUser
 )
+router.route("/refreshToken").post(refreshToken)
 
 export default router;
 // Compare this snippet from src/utils/asyncHandler.js:
