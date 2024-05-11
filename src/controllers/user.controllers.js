@@ -328,7 +328,139 @@ const loginUser = asyncHandler(async (req,res) => {
             new apiResponse(200 , user ,"CoverImage updated sucessfully")
         )
     })
+// Now we need to show  the user detail page which contain username email ,  fullname,  avatar , converImage , subcribers ,subscribed
+//thus to calaculate the subscribers and subscribed we need to use the aggregation pipeline of mongodb  and we need to use the $lookup operator 
 
+    const getUserChannelProfile = asyncHandler(async(req , res) => {
+         //get the username from the request params
+         const {username} = req.params //this is function degregation
+
+         if(!username){
+             throw new apiError(400 , "Username is not found")
+         }
+
+         const channel  =  await User.aggregate([
+            {
+                $match : {                      //$ represent the field and match is used to match the field  like where clause in sql 
+                    username : username
+                }                 
+            },
+            {
+                $lookup :{       //lookup is used to join the collection and it is a pipeline operator
+                    from: "subscriptions", //from is used to join the collection
+                    localField : "_id", //localField is used to join the field of the collection
+                    foreignField : "channel", //foreignField is used to join the field of the collection
+                    as : "subscribers", //as is used to give the name of the field  
+                }
+            },
+            {
+                $lookup :{       //lookup is used to join the collection and it is a pipeline operator
+                    from: "subscriptions", //from is used to join the collection
+                    localField : "_id", //localField is used to join the field of the collection
+                    foreignField : "subscriber", //foreignField is used to join the field of the collection
+                    as : "subscribedTo", //as is used to give the name of the field  
+                }
+                
+            },
+            {
+                $addFields : {
+                    subscribersCount :{
+                        $size : "$subscribers"
+                    },
+                    subscribedToCount : {
+                        $size : "$subscribedTo"
+                    },
+                    isSubscribed : {
+                        $cond :{
+                            if : [req.user._id ,  "$subscribers.subscriber"],
+                            then : true,
+                            else : false
+
+                        }
+                    }
+                }
+            },
+            {
+                $project : {
+                    username : 1,
+                    fullName : 1,
+                    email : 1,
+                    avatar : 1,
+                    coverImage : 1,
+                    subscribersCount : 1,
+                    subscribedToCount : 1,
+                    isSubscribed : 1                        
+                }
+            }
+         ])
+
+         if(!channel?.length){
+             throw new apiError(404 , "Channel not found")
+         }
+
+        return res
+        .status(200)
+        .json(
+            new apiResponse(200 , channel[0] ,"Channel details fetched sucessfully")
+        )
+        
+    })
+     
+    const getUserWatchHistory  = asyncHandler(async(req , res) => {
+        const user  = await User.aggregate([
+            {
+                $match : {
+                    _id : new mongoose.Types.ObjectId( req.user._id)
+                }
+            },
+            {
+                $lookup :{
+                    from : "videos",
+                    localField : "watchHistory",
+                    foreignField : "_id",
+                    as : "watchHistory",
+                    pipeline : [
+                        {
+                            $lookup : {
+                                from : "users",
+                                localField : "owner",
+                                foreignField : "_id",
+                                as : "owner",
+                                pipline : [
+                                    {
+                                        $project : {
+                                            username : 1,
+                                            fullName : 1,
+                                            avatar : 1
+                                        
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        
+                    ]
+                }
+            },
+            {
+                $addFields :  {
+                    owner :{
+                        $first : "$owner"
+                    }
+                }
+            }
+        ])
+        return res
+        .status(200)
+        .json(
+            new apiResponse(
+                200,
+                user[0].watchHistory,
+                "Watch history fetched successfully"
+            )
+        )
+        
+    })
 
 export {registerUser,
        loginUser,
@@ -337,6 +469,8 @@ export {registerUser,
        changeCurrentPassword,
        updateUserAccountDetails,
        updateAvatar,
-       updateCoverImage
+       updateCoverImage,
+       getUserChannelProfile,
+       getUserWatchHistory
 
     };

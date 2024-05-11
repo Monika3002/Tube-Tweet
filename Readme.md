@@ -45,7 +45,7 @@ bcrypt  :A library to help you hash passwords.https://www.npmjs.com/package/bcry
 
 jwt(json web token) https://www.npmjs.com/package/json-web-token JWT encode and decode for Node.js that can use callbacks or by returning an object {error:, value:}
 
-prehook in middleware
+## prehook in middleware
 
 
 cloudnary : An big contentar organisation from  whicch
@@ -59,3 +59,5 @@ After that we have  created the routes and controller routes decide whhere to ta
 
 AccessToken = short lived authentication
 refreshToken = long lived  
+
+aggrigation pipeline : mongodb atlas and lookup function ,first ,  projects
