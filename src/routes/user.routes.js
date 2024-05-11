@@ -5,6 +5,7 @@ import {
     loginUser ,
     logoutUser,
     refreshToken,
+    getCurrentUser,
     changeCurrentPassword,
     updateUserAccountDetails,
     updateAvatar,
@@ -38,9 +39,29 @@ router.route("/logout").post(
     verifyJWT , logoutUser
 )
 
-router.route("/refreshToken").post(refreshToken)
+router.route("/refresh-Token").post(refreshToken)
 
+router.route("/current-user").get(verifyJWT , getCurrentUser)
 
+router.route("/change-Password").post(verifyJWT , changeCurrentPassword)
+
+router.route("/update-Account-Details").patch(verifyJWT , updateUserAccountDetails)
+
+router.route("/update-Avatar").patch(
+    verifyJWT,
+    upload.single("avatar"),
+    updateAvatar
+)
+
+router.route("/update-Cover-Image").patch(
+    verifyJWT,
+    upload.single("coverImage"),
+    updateCoverImage
+)
+
+router.route("/c/:username").get(verifyJWT ,getUserChannelProfile)
+
+router.route("/watch-history").get(verifyJWT , getUserWatchHistory)
 
 export default router;
 // Compare this snippet from src/utils/asyncHandler.js:

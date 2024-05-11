@@ -196,6 +196,16 @@ const loginUser = asyncHandler(async (req,res) => {
 
     })
 
+    const getCurrentUser = asyncHandler(async(req, res) => {
+        return res
+        .status(200)
+        .json(new apiResponse(
+            200,
+            req.user,
+            "User fetched successfully"
+        ))
+    })
+
     const changeCurrentPassword = asyncHandler(async(req ,res ) => {
         //for this we need to check if the user is logged in or not so wee need to use the auth middleware
         //get the current password from the user
@@ -466,6 +476,7 @@ export {registerUser,
        loginUser,
        logoutUser,
        refreshToken,
+       getCurrentUser,
        changeCurrentPassword,
        updateUserAccountDetails,
        updateAvatar,
