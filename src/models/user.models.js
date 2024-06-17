@@ -60,6 +60,11 @@ userSchema.pre("save", async function (next) {
 })
 
 userSchema.methods.isPasswordCorrect = async function(password){
+    if (!password || !this.password) {
+        // You can throw an error or handle it as you see fit
+        throw new Error('Both data and hash arguments are required');
+    }
+    // console.log("this.password :",this.password)
     return await bcrypt.compare(password, this.password)
 }
 

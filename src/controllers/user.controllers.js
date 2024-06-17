@@ -166,11 +166,7 @@ const loginUser = asyncHandler(async (req,res) => {
     })
     
     const refreshAccessToken = asyncHandler(async (req, res) => {
-//         console.log('Cookies:', req.cookies);
-// console.log('Body:', req.body);
-        const incomingRefreshToken = req.body.refreshToken
-        // const incomingRefreshToken = req.cookies.refreshToken
-        // console.log(incomingRefreshToken)
+        const incomingRefreshToken = req.cookies.refreshToken
         if (!incomingRefreshToken) {
             throw new apiError(401, "IncomingRefresh token unauthorized request")
         }
@@ -234,9 +230,10 @@ const loginUser = asyncHandler(async (req,res) => {
         //change the password
 
         const {oldPassword , newPassword} = req.body
-        const user = await findById(req.user._id)
+        const user = await User.findById(req.user?._id)
+        // console.log("oldpassword",oldPassword ,"new password", newPassword)
         const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
-        if(isPasswordCorrect){
+        if(!isPasswordCorrect){
             throw new apiError(400 , "Current password is incorrect")
         }
         
@@ -336,7 +333,7 @@ const loginUser = asyncHandler(async (req,res) => {
             {new : true}
         )
         const coverImage = uploadOnCloudinary(coverImageLocalPath)
-        if(!avatar){
+        if(!coverImage){
             throw new apiError(400 , "errror while uploading CoverImage on cloudaniary required")
         }
 
@@ -424,7 +421,7 @@ const loginUser = asyncHandler(async (req,res) => {
                 }
             }
          ])
-
+      console.log("channel",channel.length)
          if(!channel?.length){
              throw new apiError(404 , "Channel not found")
          }
