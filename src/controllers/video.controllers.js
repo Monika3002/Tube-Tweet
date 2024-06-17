@@ -7,151 +7,275 @@ import {cloudinary} from '../utils/cloudinary';
 import {apiResponse} from '../utils/apiResponse';
       //TODO: get all videos based on query, sort, pagination
 
-const  getAllVideos = asyncHandler(async(req,res)=>{
-    const { 
-        page = 1, 
-        limit = 10, 
-        query="",
-        sortBy= "createdAt",
-        sortType= "desc",
-        userId ,
-    } = req.query;
-    if(!isValidObjectId(userId)){
-        throw new apiError(400, "Invalid user id")
-    }
-// create  a video oject with the query params to be used in the aggregation pipelinefor the match stage 
-// create a model aggregate  
-try{
-const videos = Video.aggregate([
-        {
-          $match: {
-            owner: req.user?._id,
-            title: { $regex: query, $options: "i" },
-          },
-        },
-      ]).sort({
-        [`${sortType}`]: `${sortBy}`,
-      });
-
-      //create a option object to be used in the paginate method for page and limit
-      // create a option where there is a page and limit which is not defined early it may be any number
-      const options = {
-        page,
-        limit
-      };
-
-      // create a data object becuase the paginate method returns an object with the data and the meta data
-     // now we are using the aggregatePaginate method to paginate the videos that means in simple word 
-     // we are using the aggregate method to get the videos and then paginate them as a callback function
-      const data = await Video.aggregatePaginate(
-        videos,
-        options ,
-        function (err,result){
-            if(err){
-                throw new apiError(400, "Video pagination is failed !")
-            }
-            return result
+      const getAllVideos = asyncHandler(async (req, res) => {
+        const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+        //TODO: get all videos based on query, sort, pagination
+    
+    
+    
+        if(!userId){
+            throw new apiError(400,"userid required")
         }
-      );
-
-      return res
-      .status(200)
-      .json(
-        apiResponse(
-            true,
-            "Videos fetched successfully",
-            data
+    
+        const pipline = []
+        if(userId){
+            await User.findById(userId)
+    
+            pipline.push({
+                $match:{
+                    owner: new mongoose.Types.ObjectId(userId),   
+                }
+            })
+        }
+        console.log(query,typeof query);
+        
+    
+        if(query){
+            pipline.push({
+                $match:{
+                   isPublished:false
+                }
+            })
+        }
+    
+        let createFeiild = {}
+        if(sortBy && sortType){
+            createFeiild[sortBy] = sortType === "asc" ?1:-1
+            
+            pipline.push({
+                $sort:createFeiild
+            })
+        }
+        else{
+            createFeiild["createdAt"] =-1
+            
+            pipline.push({
+                $sort:createFeiild
+            })
+        }
+    
+        pipline.push({
+            $skip: (page - 1) * limit
+        });
+        pipline.push({
+            $limit: limit
+        });
+        console.log(pipline);
+        /*
+        [
+      { '$match': { owner: new ObjectId('65e0782461c4addc4efa7528') } },  
+      { '$match': { isPublished: false } },
+      { '$sort': { isPublished: 1 } },
+      { '$skip': 0 },
+      { '$limit': 10 }
+    ] */
+    
+       const allVedios =  await Video.aggregate(pipline)
+       if(!allVedios){
+        throw new apiError(400,"pipline aggreagtion problem")
+       }
+    
+       res.status(200).json(
+        new apiResponse(
+            200,
+            allVedios,
+            `all vedios are here count:${allVedios.length}` 
         )
-      )
-    }catch(error){
-        throw new apiError(500, "something  went wrong while video pagination")
-    }
-});
-      // TODO: get video, upload to cloudinary, create video
-
-const     publishAVideo = asyncHandler(async(req,res)=>{
-
-   const {title , description} = req.body;
-   const {videoFile, thumbnail} = req?.files;
-
-   const {path:videoFilePath} = videoFile[0]; //sqare brackets are used to get the first element of the array
-   const {path:thumbnailPath} = thumbnail[0];
-
-   if(!isValidObjectId(req.user?._id)){
-       throw new apiError(400, "Invalid user id")
-   }
-
-   if(!videoFilePath || !thumbnailPath){
-         throw new apiError(400, "Video file and thumbnail are required")
-   }
-try{
-    //upload video to cloudinary
-    const videofileResponse =await uploadOnCloudinary(videoFilePath);
-    const thumbnailResponse =await uploadOnCloudinary(thumbnailPath);
-    //now create a video object to be saved in the database
-    const video = await Video.create({
-        title,
-        description,
-        videoFile: videofileResponse.url,
-        thumbnail: thumbnailResponse.url,
-        duration: videofileResponse.duration,
-        owner: req.user?._id
-    });
-
-    await video.save();
-    return res
-      .status(201)
-      .json(new apiResponse(201, video, "Video published Successfully"));
-  }
-  catch (error) {
-    throw new apiError(
-      500,
-      error?.message || "Something went wrong. Video not published!!"
-    );
-  }
-
-});
-const getVideoById = asyncHandler(async (req, res) => {
-    const { videoId } = req.params;
-  
-    if (!isValidObjectId(videoId)) {
-      throw new apiError(400, "Invalid video id");
-    }
-  
-    try {
-      const video = await Video.findById({ _id: videoId });
-  
-      return res
-        .status(200)
-        .json(new apiResponse(200, video, "Video fech Successfully"));
-    } catch (error) {
-      throw new apiError(
-        500,
-        error?.message || "Something went wrong. Video not fetched!!"
-      );
-    }
-    //TODO: get video by id
-  });
-  
-  const updateVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params;
-    //TODO: update video details like title, description, thumbnail
-  });
-  
-  const deleteVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params;
-    //TODO: delete video
-  });
-  
-  const togglePublishStatus = asyncHandler(async (req, res) => {
-    const { videoId } = req.params;
-  });
-
-  export {
-    getAllVideos,
-    publishAVideo,
-    getVideoById,
-    updateVideo,
-    deleteVideo,
-    togglePublishStatus,
-  };
+       )
+    
+    
+    })
+    
+    const publishAVideo = asyncHandler(async (req, res) => {
+        const { title, description} = req.body
+        // TODO: get video, upload to cloudinary, create video
+    
+        
+    
+        if(!(title && description))
+        {
+            throw new apiError(400,"user should provide title and discription")
+        }
+    
+        // console.log(req.files.vedio);
+        // console.log(req.files.thumbnail);
+    
+        const vedioUrl = req.files?.vedio[0]?.path
+        const thumbnailUrl = req.files?.thumbnail[0]?.path
+    
+        if(!vedioUrl){
+            throw new apiError(400,"vedio path is required")
+        }
+        if(!thumbnailUrl){
+            throw new apiError(400,"thumbnail path is required")
+        }
+    
+        const vedio = await uplaodOnCloudinary(vedioUrl)
+        const thumbnail = await uplaodOnCloudinary(thumbnailUrl)
+        console.log(vedio);
+    
+    
+        const vedioData = await Vedio.create({
+            vedioFile:vedio?.url,
+            thumbnail:thumbnail?.url,
+            owner:req.user?._id,  
+            title:title,
+            description:description,
+            duration:vedio.duration,
+            views:0,
+            isPublished : false,
+        })
+        return res.status(200).json(
+            new apiResponse(
+                200,
+                vedioData,
+                "Vedio published succcessfully"
+    
+            )
+        )
+    
+    
+    })
+    
+    const getVideoById = asyncHandler(async (req, res) => {
+        const { videoId } = req.params
+        //TODO: get video by id
+    
+    
+       const userVedio = await Vedio.findById(videoId)
+       console.log(userVedio?.owner.toString());
+       console.log(req.user?._id.toString());
+    
+       if(!userVedio || ((!userVedio.isPublished) && (!userVedio.owner === req.user._id))){
+        throw new apiError(400,"vedio ur seacrching for doesnot exist")
+       }
+    
+    
+    
+       return res.status(200).json(
+        new apiResponse(
+            200,
+            userVedio,
+            "vedio found successfullly"
+        )
+       )
+    
+    })
+    
+    const updateVideo = asyncHandler(async (req, res) => {
+        const { videoId } = req.params
+        //TODO: update video details like title, description, thumbnail
+     
+    
+        const myVedio = await Video.findById(videoId)
+    
+        if(!myVedio ||!(userVedio.owner.toString() === req.user._id.toString())){
+            throw new apiError(400,"Cannot find the vedio")
+        }
+    
+        const {title,description} = req.body;
+    
+        const thumbnail = await req.file?.path
+        
+        if(!(title && description))
+        {
+            throw new apiError(400," title and discription required for updation")
+        }
+        
+        if(!thumbnail){
+            throw new apiError(400,"for update thumbnail is required")
+        }
+    
+        const updatedthumbnail = await uplaodOnCloudinary(thumbnail)
+        await deleteOnClodinary(myVedio.thumbnail)
+       const newVedio =  await Vedio.findByIdAndUpdate(videoId
+            ,
+            {
+                $set:{
+                    title:title,
+                    description:description,
+                    thumbnail:updatedthumbnail?.url
+                }
+            },
+            {
+                new:true,
+            })
+    
+            return res.status(200).json(
+                new apiResponse(
+                    200,
+                    newVedio,
+                    "updated successfully"
+                )
+            )
+    
+    
+    })
+    
+    const deleteVideo = asyncHandler(async (req, res) => {
+        const { videoId } = req.params
+        //TODO: delete video
+        
+        if(!videoId){
+            throw new apiError(400,"Cannot find the vedioid")
+        }
+        const deleteVedio =  await Vedio.findById(videoId)
+        if(!deleteVedio || !(deleteVedio.owner.toString() === req.user._id.toString())){
+            throw new apiError(400,"Cannot find the vedio")
+        }
+        console.log(deleteVedio.vedioFile);
+    
+        await deleteOnClodinary(deleteVedio.vedioFile)
+    
+       await Vedio.findByIdAndDelete(videoId)
+    
+            
+            return res.status(200).json(
+                new apiResponse(
+                    200,
+                    "updated successfully"
+                )
+            )
+    
+        
+    })
+    
+    const togglePublishStatus = asyncHandler(async (req, res) => {
+        const { videoId } = req.params
+    
+        if(!videoId){
+            throw new apiError(400,"id not accessable")
+        }
+    
+        const vedioExisted =  await Video.findById(videoId)
+        if(!vedioExisted){
+            throw new apiError(400,"Vedio doesnot existed")}
+    
+    
+         if(!vedioExisted.owner == req.user?._id)
+        {   throw new apiError(400,"Not allowed to toggle")
+        }
+        // console.log(vedioExisted.isPublished );
+        vedioExisted.isPublished = ! Video.isPublished
+       await vedioExisted.save({validateBeforeSave: false})
+        // console.log( vedioExisted.isPublished);
+    
+        return res.status(200).json(
+            new apiResponse(
+                200,
+                vedioExisted.isPublished ,
+                "check published or not"
+    
+            )
+        )
+    
+    })
+    
+    export {
+        publishAVideo,
+        getVideoById,
+        updateVideo,
+        deleteVideo,
+        togglePublishStatus,
+        getAllVideos,
+    };
