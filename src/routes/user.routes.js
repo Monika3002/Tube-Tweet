@@ -4,7 +4,7 @@ import {
     registerUser , 
     loginUser ,
     logoutUser,
-    refreshToken,
+    refreshAccessToken,
     getCurrentUser,
     changeCurrentPassword,
     updateUserAccountDetails,
@@ -36,10 +36,11 @@ router.route("/login").post(loginUser)
  //secured route means user need to be logged in to access this route
 
 router.route("/logout").post(
-    verifyJWT , logoutUser
+    verifyJWT ,
+     logoutUser
 )
 
-router.route("/refresh-Token").post(refreshToken)
+router.route("/refresh-Token").post(refreshAccessToken)
 
 router.route("/current-user").get(verifyJWT , getCurrentUser)
 
