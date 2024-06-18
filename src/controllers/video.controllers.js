@@ -1,14 +1,16 @@
 import mongoose, {isValidObjectId} from 'mongoose';
-import {Video} from '../models/video.models';
-import {User} from '../models/user.models';
-import {apiError} from '../utils/apiError';
-import {asyncHandler} from '../utils/asyncHandler';
-import {cloudinary} from '../utils/cloudinary';
-import {apiResponse} from '../utils/apiResponse';
+import {Video} from '../models/video.models.js';
+import {User} from '../models/user.models.js';
+import {apiError} from '../utils/apiError.js';
+import {asyncHandler} from '../utils/asyncHandler.js';
+import {uploadOnCloudinary} from '../utils/cloudnary.js';
+import {apiResponse} from '../utils/apiResponse.js';
       //TODO: get all videos based on query, sort, pagination
 
       const getAllVideos = asyncHandler(async (req, res) => {
-        const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+        // const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+        const { page = 1, limit = 10, query, sortBy = 'createdAt', sortType = 'desc', userId } = req.query;
+
         //TODO: get all videos based on query, sort, pagination
     
     
@@ -58,7 +60,7 @@ import {apiResponse} from '../utils/apiResponse';
             $skip: (page - 1) * limit
         });
         pipline.push({
-            $limit: limit
+            $limit: 10
         });
         console.log(pipline);
         /*
@@ -87,9 +89,9 @@ import {apiResponse} from '../utils/apiResponse';
     })
     
     const publishAVideo = asyncHandler(async (req, res) => {
-        const { title, description} = req.body
+        const { title, description} = req.body;
         // TODO: get video, upload to cloudinary, create video
-    
+    console.log(title,description);
         
     
         if(!(title && description))
@@ -97,31 +99,34 @@ import {apiResponse} from '../utils/apiResponse';
             throw new apiError(400,"user should provide title and discription")
         }
     
-        // console.log(req.files.vedio);
+        // console.log(req.files.video);
         // console.log(req.files.thumbnail);
     
-        const vedioUrl = req.files?.vedio[0]?.path
+        const videoUrl = req.files?.video[0]?.path
         const thumbnailUrl = req.files?.thumbnail[0]?.path
+        console.log(videoUrl,thumbnailUrl);
     
-        if(!vedioUrl){
+        if(!videoUrl){
             throw new apiError(400,"vedio path is required")
         }
         if(!thumbnailUrl){
             throw new apiError(400,"thumbnail path is required")
         }
     
-        const vedio = await uplaodOnCloudinary(vedioUrl)
-        const thumbnail = await uplaodOnCloudinary(thumbnailUrl)
-        console.log(vedio);
+        // const video = await uploadOnCloudinary(vedioUrl)
+        // const thumbnail = await uploadOnCloudinary(thumbnailUrl)
     
+        const video = await uploadOnCloudinary(videoUrl); // Corrected typo here
+        const thumbnail = await uploadOnCloudinary(thumbnailUrl);
+     console.log(video,thumbnail);
     
-        const vedioData = await Vedio.create({
-            vedioFile:vedio?.url,
+        const videoData = await Video.create({
+            video:video?.url,
             thumbnail:thumbnail?.url,
             owner:req.user?._id,  
             title:title,
             description:description,
-            duration:vedio.duration,
+            duration:video?.duration,
             views:0,
             isPublished : false,
         })
@@ -142,7 +147,7 @@ import {apiResponse} from '../utils/apiResponse';
         //TODO: get video by id
     
     
-       const userVedio = await Vedio.findById(videoId)
+       const userVedio = await Video.findById(videoId)
        console.log(userVedio?.owner.toString());
        console.log(req.user?._id.toString());
     
@@ -186,9 +191,9 @@ import {apiResponse} from '../utils/apiResponse';
             throw new apiError(400,"for update thumbnail is required")
         }
     
-        const updatedthumbnail = await uplaodOnCloudinary(thumbnail)
+        const updatedthumbnail = await uploadOnCloudinary(thumbnail)
         await deleteOnClodinary(myVedio.thumbnail)
-       const newVedio =  await Vedio.findByIdAndUpdate(videoId
+       const newVedio =  await Video.findByIdAndUpdate(videoId
             ,
             {
                 $set:{
@@ -219,7 +224,7 @@ import {apiResponse} from '../utils/apiResponse';
         if(!videoId){
             throw new apiError(400,"Cannot find the vedioid")
         }
-        const deleteVedio =  await Vedio.findById(videoId)
+        const deleteVedio =  await Video.findById(videoId)
         if(!deleteVedio || !(deleteVedio.owner.toString() === req.user._id.toString())){
             throw new apiError(400,"Cannot find the vedio")
         }
@@ -227,7 +232,7 @@ import {apiResponse} from '../utils/apiResponse';
     
         await deleteOnClodinary(deleteVedio.vedioFile)
     
-       await Vedio.findByIdAndDelete(videoId)
+       await Video.findByIdAndDelete(videoId)
     
             
             return res.status(200).json(
@@ -272,7 +277,7 @@ import {apiResponse} from '../utils/apiResponse';
     })
     
     export {
-        publishAVideo,
+        publishAVideo ,
         getVideoById,
         updateVideo,
         deleteVideo,
